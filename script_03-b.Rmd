@@ -50,9 +50,64 @@ sep_new <-
 
 a) Make a table using **gt** which shows the five courses with the biggest increase. Use the [How to make a table](https://davidkane9.github.io/PPBDS/tools.html#how-to-make-a-table) section of *The Primer*.
 
+```{r}
+sep_new %>%
+inner_join(sep_old, sep_new, by = "id", suffix = c("_old", "_new")) %>%
+    mutate(enrollment_change = u_grad_old - u_grad_new) %>%
+arrange(desc(enrollment_change)) %>%
+  slice_head(n=5) %>%
+    select(name_new, department_new, enrollment_change) %>%
+   gt() %>%
+   tab_header(title = md("**Top 5 Classes with Highest Increase in Enrollment**")) %>%
+    cols_label(name_new = "Course Name", 
+             department_new = "Department",
+              enrollment_change = "Enrollment Increase") %>%
+  tab_source_note(md("Source: Harvard University Registrars' Office"))
+```
+
 b) Make a table using **gt** which shows the five courses with the biggest decrease.
 
+```{r}
+sep_new %>%
+inner_join(sep_old, sep_new, by = "id", suffix = c("_old", "_new")) %>%
+    mutate(enrollment_change = u_grad_new - u_grad_old) %>%
+arrange(desc(enrollment_change)) %>%
+  slice_head(n=5) %>%
+    select(name_new, department_new, enrollment_change) %>%
+   gt() %>%
+   tab_header(title = md("**Top 5 Classes with Highest Decrease in Enrollment**")) %>%
+    cols_label(name_new = "Course Name", 
+             department_new = "Department",
+              enrollment_change = "Enrollment Decrease") %>%
+  tab_source_note(md("Source: Harvard University Registrars' Office"))
+```
+
+
 c) Make a nice looking graphic which shows these 10 courses.
+
+```{r}
+decrease <- sep_new %>%
+inner_join(sep_old, sep_new, by = "id", suffix = c("_old", "_new")) %>%
+    mutate(enrollment_change = u_grad_new - u_grad_old) %>%
+arrange(desc(enrollment_change)) %>%
+  slice_head(n=5) %>%
+  mutate(enrollment_change = -(enrollment_change)) %>%
+    select(name_new, department_new, enrollment_change)
+
+increase <- sep_new %>%
+inner_join(sep_old, sep_new, by = "id", suffix = c("_old", "_new")) %>%
+    mutate(enrollment_change =  u_grad_old - u_grad_new ) %>%
+arrange(desc(enrollment_change)) %>%
+  slice_head(n=5) %>%
+    select(name_new, department_new, enrollment_change) 
+
+full_join(increase, decrease, by = c("name_new", "department_new", "enrollment_change")) %>%
+  arrange(desc(enrollment_change)) %>%  
+  ggplot(aes(x=name_new, y=enrollment_change))+
+  geom_col() + 
+  labs(Title = "Fall 2020 Classes with Biggest Changes in Enrolment", x = "Course Name", y= "Change in Enrolment") 
+```
+
 
 d) Write down some thoughts about what might explain these increases and decreases. Or is it all just random? How would we know?
 
